@@ -14,6 +14,6 @@ public class Example : MonoBehaviour
         var playerProgress = UserSaveData.instance.playerSaveData.playerProgress;
         playerProgress.example = !playerProgress.example;
 
-        UserSaveData.instance.Save();
+        UserSaveData.instance.SavePlayerData();
     }
 }

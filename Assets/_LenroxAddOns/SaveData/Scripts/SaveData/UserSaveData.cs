@@ -1,46 +1,34 @@
 ﻿using System.IO;
 using UnityEngine;
+using UnityEditor;
 using Sirenix.OdinInspector;
 
-public class UserSaveData : Singleton<UserSaveData>
+public class UserSaveData : Singleton<UserSaveData>, ISaveData
 {
-    [SerializeField]
-    private PlayerSaveData _playerData;
+    [SerializeField] private SaveData _saveData = new SaveData();
 
-    private string _userPreferencesFile = @"/userSaveData.dat";
-    private const string _encryptKey = "al8s1c12";
+    public PlayerSaveData playerSaveData { get { return _saveData.playerSaveData; } set { _saveData.playerSaveData = value; } }
 
-    public PlayerSaveData playerSaveData => _playerData;
-    private string _saveFilePath => Application.persistentDataPath + _userPreferencesFile;
     private void Awake()
-    {
-        _playerData = new PlayerSaveData();
-        Init();
-    }
-    private void Init() // Load data on init
     {
         Load();
     }
-    public void Load() //Loading data 
+    public void Load()
     {
-        if (File.Exists(_saveFilePath))
-        {
-            string json = Encryptor.DecryptFromBase64(File.ReadAllText(_saveFilePath), _encryptKey);
-            var data = JsonUtility.FromJson<PlayerSaveData>(json);
-            _playerData = data;
-        }
-        else Debug.Log("Save Not Exist");
+        _saveData.LoadAllData();
     }
-    [Button, HorizontalGroup("Buttons",.5f)]
-    public void Save() //Saving data 
+    [Button]
+    public void SaveAllData()
     {
-        string encodedJson = Encryptor.EncryptToBase64(JsonUtility.ToJson(_playerData), _encryptKey);
-        File.WriteAllText(_saveFilePath, encodedJson);
+        _saveData.SaveAllData();
     }
-    [Button, HorizontalGroup("Buttons", .5f)]
-    public void Clear() //Clear save data
+    [Button]
+    public void Clear()
     {
-        _playerData = new PlayerSaveData();
-        Save();
+        _saveData.Clear();
+    }
+    public void SavePlayerData()
+    {
+        _saveData.SavePlayerData();
     }
 }
