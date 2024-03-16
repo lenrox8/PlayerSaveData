@@ -6,12 +6,13 @@ using System.IO;
 using System.Linq;
 using UnityEngine;
 
+[System.Serializable]
 public class SaveController
 {
     [SerializeField, ReadOnly]
     private string _currentSaveDataName;
 
-    [SerializeField]
+    [SerializeField, BoxGroup("Save")]
     private SaveData _currentSaveData;
 
     public SaveData currentSaveData

@@ -6,7 +6,8 @@ using System;
 [ShowOdinSerializedPropertiesInInspector, System.Serializable]
 public class SaveData: ISaveData
 {
-    [SerializeField] private PlayerSaveData _playerSaveData;
+    [SerializeField, BoxGroup("Data")] 
+    private PlayerSaveData _playerSaveData;
 
     public PlayerSaveData playerSaveData { get { return _playerSaveData; } set { _playerSaveData = value; } }
 
@@ -64,7 +65,7 @@ public class SaveData: ISaveData
             SaveDataFile<T>(ref data, saveFolder, path);
         }
     }
-    [Button]
+    [Button(ButtonSizes.Medium), FoldoutGroup("Data/Buttons")]
     public void SavePlayerData()
     {
         SaveDataFile<PlayerSaveData>(ref _playerSaveData,_saveFolder, _playerSaveFile);

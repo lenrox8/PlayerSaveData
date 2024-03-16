@@ -5,9 +5,22 @@ using Sirenix.OdinInspector;
 
 public class UserSaveData : Singleton<UserSaveData>, ISaveData
 {
-    [SerializeField] private SaveController _saveController;
+    [SerializeField]
+    private SaveData _currentSaveData;
 
-    public PlayerSaveData playerSaveData { get { return _saveController.currentSaveData.playerSaveData; } set { _saveController.currentSaveData.playerSaveData = value; } }
+    public SaveData currentSaveData
+    {
+        get 
+        {
+            if (_currentSaveData == null) _currentSaveData = _saveController.currentSaveData;
+            return _currentSaveData; 
+        }
+        set { _currentSaveData = value; }
+    }
+
+    private SaveController _saveController = new SaveController();
+
+    public PlayerSaveData playerSaveData { get { return currentSaveData.playerSaveData; } set { currentSaveData.playerSaveData = value; } }
 
     private void Awake()
     {
@@ -15,20 +28,20 @@ public class UserSaveData : Singleton<UserSaveData>, ISaveData
     }
     public void Load()
     {
-        _saveController.currentSaveData.LoadAllData();
+        currentSaveData.LoadAllData();
     }
     [Button]
     public void SaveAllData()
     {
-        _saveController.currentSaveData.SaveAllData();
+        currentSaveData.SaveAllData();
     }
     [Button]
     public void Clear()
     {
-        _saveController.currentSaveData.Clear();
+        currentSaveData.Clear();
     }
     public void SavePlayerData()
     {
-        _saveController.currentSaveData.SavePlayerData();
+        currentSaveData.SavePlayerData();
     }
 }
