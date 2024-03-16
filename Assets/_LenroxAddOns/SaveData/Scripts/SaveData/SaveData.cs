@@ -10,9 +10,19 @@ public class SaveData: ISaveData
 
     public PlayerSaveData playerSaveData { get { return _playerSaveData; } set { _playerSaveData = value; } }
 
-    private const string DESKey = "Cl4G21p5";
-    private string userPreferencesFile = @"/userPreferences.dat";
+    private const string _DESKey = "Cl4G21p5";
+    private string _playerSaveFile = @"/playerSave.dat";
 
+    private string _saveFolder;
+    public SaveData(string saveFolder)
+    {
+        this._saveFolder = saveFolder;
+    }
+    [OnInspectorInit]
+    private void Init()
+    {
+        LoadAllData();
+    }
 
     [Button(ButtonSizes.Medium), PropertyOrder(-1)]
     public void Clear()
@@ -24,40 +34,40 @@ public class SaveData: ISaveData
     [Button(ButtonSizes.Large), PropertyOrder(-3)]
     public void SaveAllData()
     {
-        SaveDataFile<PlayerSaveData>(ref _playerSaveData, userPreferencesFile);  
+        SaveDataFile<PlayerSaveData>(ref _playerSaveData,_saveFolder, _playerSaveFile);  
     }
     [HorizontalGroup("Split", 0.5f)]
     [Button(ButtonSizes.Large), PropertyOrder(-2)]
     public void LoadAllData()
     {
-        LoadData<PlayerSaveData>(ref _playerSaveData, userPreferencesFile);
+        LoadData<PlayerSaveData>(ref _playerSaveData,_saveFolder, _playerSaveFile);
     }
-    public static void SaveDataFile<T>(ref T data, string path) where T : class
+    public static void SaveDataFile<T>(ref T data,string saveFolder, string path) where T : class
     {
-        string filePath = Application.persistentDataPath + path;
+        string filePath = Application.persistentDataPath + saveFolder + path;
         string json = JsonUtility.ToJson(data);
-        string encodedJson = Encryptor.EncryptToBase64(json, DESKey);
+        string encodedJson = Encryptor.EncryptToBase64(json, _DESKey);
         File.WriteAllText(filePath, encodedJson);
     }
-    public static void LoadData<T>(ref T data, string path) where T : class
+    public static void LoadData<T>(ref T data, string saveFolder, string path) where T : class
     {
-        string filePath = Application.persistentDataPath + path;
+        string filePath = Application.persistentDataPath + saveFolder + path;
         if (File.Exists(filePath))
         {
             string jsonEncoded = File.ReadAllText(filePath);
-            string json = Encryptor.DecryptFromBase64(jsonEncoded, DESKey);
+            string json = Encryptor.DecryptFromBase64(jsonEncoded, _DESKey);
             data = JsonUtility.FromJson<T>(json);
         }
         else
         {
             data = Activator.CreateInstance(typeof(T)) as T;
-            SaveDataFile<T>(ref data, path);
+            SaveDataFile<T>(ref data, saveFolder, path);
         }
     }
     [Button]
     public void SavePlayerData()
     {
-        SaveDataFile<PlayerSaveData>(ref _playerSaveData, userPreferencesFile);
+        SaveDataFile<PlayerSaveData>(ref _playerSaveData,_saveFolder, _playerSaveFile);
     }
 
 }
