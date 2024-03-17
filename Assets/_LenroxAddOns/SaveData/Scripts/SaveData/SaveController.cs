@@ -9,12 +9,23 @@ using UnityEngine;
 [System.Serializable]
 public class SaveController
 {
-    [SerializeField, ReadOnly]
-    private string _currentSaveDataName;
-
-    [SerializeField, BoxGroup("Save")]
+    [SerializeField, BoxGroup("Current Save"), HideLabel]
     private SaveData _currentSaveData;
 
+    [SerializeField, BoxGroup("Game Data")]
+    private bool _showGameData = false;
+
+    [SerializeField, BoxGroup("Game Data"), HideLabel, ShowIf(nameof(_showGameData))]
+    private GameSaveData _gameSaveData;
+    public GameSaveData gameSaveData
+    {
+        get
+        {
+            if (_gameSaveData == null) _gameSaveData = GetGameSave();
+            return _gameSaveData;
+        }
+        private set { _gameSaveData = value; }
+    }
     public SaveData currentSaveData
     {
         get
@@ -29,10 +40,21 @@ public class SaveController
     [OnInspectorInit]
     private void Init()
     {
+        _gameSaveData = GetGameSave();
+        _currentSaveData = GetCurrentSave();
+
+        SaveActions.SaveChanged += Update;
+    }
+    [OnInspectorDispose]
+    private void OnDispose()
+    {
+        SaveActions.SaveChanged -= Update;
+    }
+    private void Update()
+    {
         _currentSaveData = GetCurrentSave();
     }
-
-    [PropertyOrder(-1),Button(ButtonSizes.Large), HorizontalGroup("Split", .5f), GUIColor("green")]
+    [PropertyOrder(-1),Button(ButtonSizes.Large), HorizontalGroup("Split", .5f), GUIColor("green"),PropertySpace(0,20)]
     public void CreateNewSave()
     {
         string directoryPath = SaveDataFilesPaths._savePath;
@@ -43,12 +65,12 @@ public class SaveController
 
         if (!Directory.Exists(directoryName)) Directory.CreateDirectory(directoryName);
 
-        var saveData = new SaveData($"{SaveDataFilesPaths._saveFolder}/{saveFolderName}");
+        var saveData = new SaveData(saveFolderName,$"{SaveDataFilesPaths._saveFolder}/{saveFolderName}",this);
         saveData.LoadAllData();
 
         onUpdateTreeRequired?.Invoke();
     }
-    [PropertyOrder(-1), Button(ButtonSizes.Large), HorizontalGroup("Split",.5f), GUIColor("red")]
+    [PropertyOrder(-1), Button(ButtonSizes.Large), HorizontalGroup("Split",.5f), GUIColor("red"), PropertySpace(0, 20)]
     public void ClearAllSaves()
     {
         string directoryPath = SaveDataFilesPaths._savePath;
@@ -56,6 +78,9 @@ public class SaveController
         var directoryInfo = info.GetDirectories();
 
         foreach (var directory in directoryInfo) directory.Delete(true);
+
+        gameSaveData.gameData.currentSaveId = string.Empty;
+        gameSaveData.SaveGameData();
 
         CreateNewSave();
     }
@@ -67,22 +92,66 @@ public class SaveController
 
         var info = new DirectoryInfo(directoryPath);
         var directoryInfo = info.GetDirectories();
-        directoryInfo = directoryInfo.OrderBy(x => x.LastWriteTime).ToArray();
+        directoryInfo = directoryInfo.OrderBy(x => x.LastWriteTimeUtc).ToArray();
 
         if(directoryInfo.Length == 0) return null;
 
-        var saveData = new SaveData($"{SaveDataFilesPaths._saveFolder}/{directoryInfo.Last().Name}");
+        var saveDataID = gameSaveData.gameData.currentSaveId == "" ? directoryInfo.Last().Name : gameSaveData.gameData.currentSaveId;
+        var saveData = new SaveData(saveDataID,$"{SaveDataFilesPaths._saveFolder}/{saveDataID}", this);
         saveData.LoadAllData();
 
-        _currentSaveDataName = $"{directoryInfo.Last().Name}";
+        gameSaveData.gameData.currentSaveId = saveDataID;
+        gameSaveData.SaveGameData();
 
         return saveData;
     }
-}
+    public GameSaveData GetGameSave()
+    {
+        string directoryPath = SaveDataFilesPaths._gameSavePath;
 
+        if (!Directory.Exists(directoryPath)) Directory.CreateDirectory(directoryPath);
+
+        var gameSaveData = new GameSaveData($"{SaveDataFilesPaths._gameSaveFolder}");
+        gameSaveData.LoadAllData();
+
+        return gameSaveData;
+    }
+    public void SetActiveSave(string saveId)
+    {
+        gameSaveData.gameData.currentSaveId = saveId;
+        gameSaveData.SaveAllData(); 
+       
+        _currentSaveData = GetCurrentSave();
+
+        onUpdateTreeRequired?.Invoke();
+    }
+    public void ChangeSaveName(string saveId,string name)
+    {
+        string directoryPath = SaveDataFilesPaths._savePath;
+
+        if (!Directory.Exists(directoryPath)) Directory.CreateDirectory(directoryPath);
+
+        var info = new DirectoryInfo(directoryPath);
+        var directoryInfo = info.GetDirectories();
+        var saveFolder = directoryInfo.ToList().Find(x => x.Name == saveId);
+       
+        var dirInfo = new DirectoryInfo($"{directoryPath}/{saveFolder.Name}");
+        dirInfo.MoveTo($"{directoryPath}/{name}");
+
+        if(gameSaveData.gameData.currentSaveId == saveId)
+        {
+            gameSaveData.gameData.currentSaveId = name;
+            gameSaveData.SaveAllData();
+        }
+
+        onUpdateTreeRequired?.Invoke();
+    }
+}
 public static class SaveDataFilesPaths
 {
     public static string _saveDirectoryName = "/Save";
     public static string _saveFolder = "/SaveDatas";
+    public static string _gameSaveFolder = "/GameDatas";
     public static string _savePath => Application.persistentDataPath + _saveFolder;
+    public static string _gameSavePath => Application.persistentDataPath + _gameSaveFolder;
 }

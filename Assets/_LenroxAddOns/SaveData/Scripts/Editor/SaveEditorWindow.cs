@@ -46,19 +46,19 @@ public class SaveEditorWindow : OdinMenuEditorWindow
         var directoryInfo = info.GetDirectories();
         directoryInfo = directoryInfo.OrderBy(x => x.LastWriteTime).ToArray();
 
+        string currentSaveId = saveController.GetGameSave().gameData.currentSaveId;
+
         for (int i = 0; i < directoryInfo.Length; i++)
         {
             DirectoryInfo directory = directoryInfo[i];
-            var saveData = new SaveData($"{SaveDataFilesPaths._saveFolder}/{directory.Name}");
+            var saveData = new SaveData(directory.Name,$"{SaveDataFilesPaths._saveFolder}/{directory.Name}", saveController);
             saveData.LoadAllData();
-            tree.Add($"Saves/{directory.Name}", saveData, SdfIconType.Archive);
+            tree.Add($"Saves/{directory.Name}", saveData, directory.Name == currentSaveId? SdfIconType.ArchiveFill : SdfIconType.Archive);
         }
     }
     protected override void OnDestroy()
     {
         saveController.onUpdateTreeRequired -= NewSaveCreated;
     }
-
-
 #endif
 }

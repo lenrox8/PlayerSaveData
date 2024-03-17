@@ -5,8 +5,16 @@ using UnityEngine;
 public interface ISaveData
 {
     public PlayerSaveData playerSaveData { get; set; }
-    public void Clear();
-    public void SaveAllData();
-    public void SavePlayerData();
+    public virtual void Clear()
+    {
 
+    }
+    public virtual void SaveAllData()
+    {
+
+    }
+    public virtual void SavePlayerData()
+    {
+
+    }
 }

@@ -4,71 +4,61 @@ using System.IO;
 using System;
 
 [ShowOdinSerializedPropertiesInInspector, System.Serializable]
-public class SaveData: ISaveData
+public class SaveData: DataSaveBase, ISaveData
 {
+    [SerializeField, ReadOnly, HideLabel,GUIColor("green"), BoxGroup("Data")]
+    private string _saveId = string.Empty;
+
     [SerializeField, BoxGroup("Data")] 
     private PlayerSaveData _playerSaveData;
 
     public PlayerSaveData playerSaveData { get { return _playerSaveData; } set { _playerSaveData = value; } }
 
-    private const string _DESKey = "Cl4G21p5";
     private string _playerSaveFile = @"/playerSave.dat";
 
     private string _saveFolder;
-    public SaveData(string saveFolder)
+    private SaveController _controller;
+    public SaveData(string saveId, string saveFolder, SaveController saveController)
     {
         this._saveFolder = saveFolder;
+        this._saveId = saveId;
+        _controller = saveController;
     }
     [OnInspectorInit]
-    private void Init()
+    protected override void Init()
     {
         LoadAllData();
     }
-
-    [Button(ButtonSizes.Medium), PropertyOrder(-1)]
-    public void Clear()
+    public override void SaveAllData()
     {
+        base.SaveAllData(); 
+        SavePlayerData();
+        SaveActions.SaveChanged?.Invoke();
+    }
+    public override void LoadAllData()
+    {
+        base.LoadAllData();
+        FileWriter.LoadData<PlayerSaveData>(ref _playerSaveData,_saveFolder, _playerSaveFile);
+    }
+    public override void Clear()
+    {
+        base.Clear();
         _playerSaveData = new PlayerSaveData();
     }
 
-    [HorizontalGroup("Split", 0.5f)]
-    [Button(ButtonSizes.Large), PropertyOrder(-3)]
-    public void SaveAllData()
+    [Button(ButtonSizes.Medium), VerticalGroup("Buttons",-1)]
+    public void SetActiveSave()
     {
-        SaveDataFile<PlayerSaveData>(ref _playerSaveData,_saveFolder, _playerSaveFile);  
+        _controller.SetActiveSave(this._saveId);
     }
-    [HorizontalGroup("Split", 0.5f)]
-    [Button(ButtonSizes.Large), PropertyOrder(-2)]
-    public void LoadAllData()
-    {
-        LoadData<PlayerSaveData>(ref _playerSaveData,_saveFolder, _playerSaveFile);
-    }
-    public static void SaveDataFile<T>(ref T data,string saveFolder, string path) where T : class
-    {
-        string filePath = Application.persistentDataPath + saveFolder + path;
-        string json = JsonUtility.ToJson(data);
-        string encodedJson = Encryptor.EncryptToBase64(json, _DESKey);
-        File.WriteAllText(filePath, encodedJson);
-    }
-    public static void LoadData<T>(ref T data, string saveFolder, string path) where T : class
-    {
-        string filePath = Application.persistentDataPath + saveFolder + path;
-        if (File.Exists(filePath))
-        {
-            string jsonEncoded = File.ReadAllText(filePath);
-            string json = Encryptor.DecryptFromBase64(jsonEncoded, _DESKey);
-            data = JsonUtility.FromJson<T>(json);
-        }
-        else
-        {
-            data = Activator.CreateInstance(typeof(T)) as T;
-            SaveDataFile<T>(ref data, saveFolder, path);
-        }
-    }
-    [Button(ButtonSizes.Medium), FoldoutGroup("Data/Buttons")]
+    [Button(ButtonSizes.Medium), VerticalGroup("Buttons",-1)]
     public void SavePlayerData()
     {
-        SaveDataFile<PlayerSaveData>(ref _playerSaveData,_saveFolder, _playerSaveFile);
+        FileWriter.SaveDataFile<PlayerSaveData>(ref _playerSaveData,_saveFolder, _playerSaveFile);
     }
-
+    [Button(ButtonSizes.Medium,Expanded = true,Style = ButtonStyle.Box), VerticalGroup("Buttons", -1)]
+    public void ChangeSaveName(string newName)
+    {
+        _controller.ChangeSaveName(_saveId, newName);
+    }
 }
