@@ -37,18 +37,21 @@ public class SaveController
     }
 
     public Action onUpdateTreeRequired;
+
     [OnInspectorInit]
-    private void Init()
+    public void Init()
     {
         _gameSaveData = GetGameSave();
         _currentSaveData = GetCurrentSave();
 
         SaveActions.SaveChanged += Update;
+        SaveActions.CurrentSaveChanged += Update;
     }
     [OnInspectorDispose]
     private void OnDispose()
     {
         SaveActions.SaveChanged -= Update;
+        SaveActions.CurrentSaveChanged -= Update;
     }
     private void Update()
     {
@@ -103,6 +106,8 @@ public class SaveController
         gameSaveData.gameData.currentSaveId = saveDataID;
         gameSaveData.SaveGameData();
 
+        onUpdateTreeRequired?.Invoke();
+
         return saveData;
     }
     public GameSaveData GetGameSave()
@@ -118,9 +123,14 @@ public class SaveController
     }
     public void SetActiveSave(string saveId)
     {
+        ForceSetActiveSave(saveId);
+        if (UserSaveData.instance != null) UserSaveData.instance.ChangeSave(saveId);
+    }
+    public void ForceSetActiveSave(string saveId)
+    {
         gameSaveData.gameData.currentSaveId = saveId;
-        gameSaveData.SaveAllData(); 
-       
+        gameSaveData.SaveAllData();
+
         _currentSaveData = GetCurrentSave();
 
         onUpdateTreeRequired?.Invoke();
@@ -141,6 +151,26 @@ public class SaveController
         if(gameSaveData.gameData.currentSaveId == saveId)
         {
             gameSaveData.gameData.currentSaveId = name;
+            gameSaveData.SaveAllData();
+        }
+
+        onUpdateTreeRequired?.Invoke();
+    }
+    public void EraseSave(string saveId)
+    {
+        string directoryPath = SaveDataFilesPaths._savePath;
+
+        if (!Directory.Exists(directoryPath)) Directory.CreateDirectory(directoryPath);
+
+        var info = new DirectoryInfo(directoryPath);
+        var directoryInfo = info.GetDirectories();
+        var saveFolder = directoryInfo.ToList().Find(x => x.Name == saveId);
+
+        saveFolder.Delete(true);
+
+        if (gameSaveData.gameData.currentSaveId == saveId)
+        {
+            gameSaveData.gameData.currentSaveId = "";
             gameSaveData.SaveAllData();
         }
 

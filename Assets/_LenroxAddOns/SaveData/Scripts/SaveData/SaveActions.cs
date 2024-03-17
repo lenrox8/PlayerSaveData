@@ -6,4 +6,5 @@ using UnityEngine;
 public static class SaveActions 
 {
     public static Action SaveChanged;
+    public static Action CurrentSaveChanged;
 }

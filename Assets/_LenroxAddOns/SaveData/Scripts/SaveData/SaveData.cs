@@ -46,17 +46,22 @@ public class SaveData: DataSaveBase, ISaveData
         _playerSaveData = new PlayerSaveData();
     }
 
-    [Button(ButtonSizes.Medium), VerticalGroup("Buttons",-1)]
+    [Button(ButtonSizes.Medium), FoldoutGroup("Save Buttons",Order = -1)]
     public void SetActiveSave()
     {
-        _controller.SetActiveSave(this._saveId);
+        _controller.SetActiveSave(_saveId);
     }
-    [Button(ButtonSizes.Medium), VerticalGroup("Buttons",-1)]
+    [Button(ButtonSizes.Medium), FoldoutGroup("Save Buttons", Order = -1), GUIColor("red")]
+    public void EraseSave()
+    {
+        _controller.EraseSave(_saveId);
+    }
+    [Button(ButtonSizes.Medium), FoldoutGroup("Save Buttons", Order = -1)]
     public void SavePlayerData()
     {
         FileWriter.SaveDataFile<PlayerSaveData>(ref _playerSaveData,_saveFolder, _playerSaveFile);
     }
-    [Button(ButtonSizes.Medium,Expanded = true,Style = ButtonStyle.Box), VerticalGroup("Buttons", -1)]
+    [Button(ButtonSizes.Medium,Expanded = true,Style = ButtonStyle.Box), FoldoutGroup("Save Buttons", Order = -1)]
     public void ChangeSaveName(string newName)
     {
         _controller.ChangeSaveName(_saveId, newName);

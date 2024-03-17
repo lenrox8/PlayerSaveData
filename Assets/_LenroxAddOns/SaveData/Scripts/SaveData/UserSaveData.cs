@@ -5,7 +5,7 @@ using Sirenix.OdinInspector;
 
 public class UserSaveData : Singleton<UserSaveData>, ISaveData
 {
-    [SerializeField]
+    [SerializeField, HideLabel, BoxGroup("Data")]
     private SaveData _saveData;
 
     private SaveController _controller = new SaveController();
@@ -13,16 +13,26 @@ public class UserSaveData : Singleton<UserSaveData>, ISaveData
 
     private void Awake()
     {
-        _saveData = _controller.currentSaveData;
-        Load();
+        GetCurrentSave();
     }
     private void OnEnable()
     {
-        SaveActions.SaveChanged += Load;
+        SaveActions.SaveChanged += GetCurrentSave;
     }
     private void OnDisable()
     {
-        SaveActions.SaveChanged -= Load;
+        SaveActions.SaveChanged -= GetCurrentSave;
+    }
+    public void ChangeSave(string name)
+    {
+        _controller.ForceSetActiveSave(name);
+        _saveData = _controller.currentSaveData;
+        Load();
+    }
+    public void GetCurrentSave()
+    {
+        _saveData = _controller.currentSaveData;
+        Load();
     }
     public void Load()
     {
