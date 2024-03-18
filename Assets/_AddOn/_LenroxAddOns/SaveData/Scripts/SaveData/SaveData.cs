@@ -9,19 +9,23 @@ public class SaveData: DataSaveBase, ISaveData
     [SerializeField, ReadOnly, HideLabel,GUIColor("green"), BoxGroup("Data")]
     private string _saveId = string.Empty;
 
+
     [SerializeField, BoxGroup("Data")] 
     private PlayerSaveData _playerSaveData;
 
     public PlayerSaveData playerSaveData { get { return _playerSaveData; } set { _playerSaveData = value; } }
 
     private string _playerSaveFile = @"/playerSave.dat";
-
+    private int _saveIndex;
     private string _saveFolder;
     private SaveController _controller;
-    public SaveData(string saveId, string saveFolder, SaveController saveController)
+
+    public int saveIndex => _saveIndex;
+    public SaveData(int saveIndex,string saveId, string saveFolder, SaveController saveController)
     {
         this._saveFolder = saveFolder;
         this._saveId = saveId;
+        this._saveIndex = saveIndex;
         _controller = saveController;
     }
     [OnInspectorInit]

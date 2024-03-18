@@ -6,7 +6,6 @@ public class Example : MonoBehaviour
     private void Start()
     {
         var save = UserSaveData.instance;
-        Debug.Log(save.playerSaveData.playerProgress.stringExample);
     }
 
     [Button]

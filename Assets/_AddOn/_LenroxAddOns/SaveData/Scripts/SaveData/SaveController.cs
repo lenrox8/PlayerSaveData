@@ -63,12 +63,12 @@ public class SaveController
         string directoryPath = SaveDataFilesPaths._savePath;
         var info = new DirectoryInfo(directoryPath);
         var directoryInfo = info.GetDirectories();
-        var saveFolderName = $"{SaveDataFilesPaths._saveDirectoryName}_{directoryInfo.Length}";
+        var saveFolderName = $"{SaveDataFilesPaths._saveDirectoryName}";
         var directoryName = $"{directoryPath}/{saveFolderName}";
 
         if (!Directory.Exists(directoryName)) Directory.CreateDirectory(directoryName);
 
-        var saveData = new SaveData(saveFolderName,$"{SaveDataFilesPaths._saveFolder}/{saveFolderName}",this);
+        var saveData = new SaveData(directoryInfo.Length, saveFolderName,$"{SaveDataFilesPaths._saveFolder}/{saveFolderName}",this);
         saveData.LoadAllData();
 
         onUpdateTreeRequired?.Invoke();
@@ -100,7 +100,7 @@ public class SaveController
         if(directoryInfo.Length == 0) return null;
 
         var saveDataID = gameSaveData.gameData.currentSaveId == "" ? directoryInfo.Last().Name : gameSaveData.gameData.currentSaveId;
-        var saveData = new SaveData(saveDataID,$"{SaveDataFilesPaths._saveFolder}/{saveDataID}", this);
+        var saveData = new SaveData(directoryInfo.Length, saveDataID,$"{SaveDataFilesPaths._saveFolder}/{saveDataID}", this);
         saveData.LoadAllData();
 
         gameSaveData.gameData.currentSaveId = saveDataID;
@@ -124,7 +124,7 @@ public class SaveController
     public void SetActiveSave(string saveId)
     {
         ForceSetActiveSave(saveId);
-        if (UserSaveData.instance != null) UserSaveData.instance.ChangeSave(saveId);
+        if (Application.isPlaying) UserSaveData.instance.ChangeSave(saveId);
     }
     public void ForceSetActiveSave(string saveId)
     {
@@ -173,15 +173,23 @@ public class SaveController
             gameSaveData.gameData.currentSaveId = "";
             gameSaveData.SaveAllData();
         }
-
+        _currentSaveData = GetCurrentSave();
         onUpdateTreeRequired?.Invoke();
     }
 }
 public static class SaveDataFilesPaths
 {
-    public static string _saveDirectoryName = "/Save";
+    public static string _saveDirectoryName => GetSaveDirectoryName();
     public static string _saveFolder = "/SaveDatas";
     public static string _gameSaveFolder = "/GameDatas";
     public static string _savePath => Application.persistentDataPath + _saveFolder;
     public static string _gameSavePath => Application.persistentDataPath + _gameSaveFolder;
+
+    private static string GetSaveDirectoryName()
+    {
+        var dateTime = DateTime.UtcNow.ToString();
+        dateTime = dateTime.Replace(":", "_");
+        dateTime = dateTime.Replace(" ", "_");
+        return dateTime;
+    }
 }

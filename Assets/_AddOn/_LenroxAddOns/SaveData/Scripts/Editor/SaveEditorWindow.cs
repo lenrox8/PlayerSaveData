@@ -51,7 +51,7 @@ public class SaveEditorWindow : OdinMenuEditorWindow
         for (int i = 0; i < directoryInfo.Length; i++)
         {
             DirectoryInfo directory = directoryInfo[i];
-            var saveData = new SaveData(directory.Name,$"{SaveDataFilesPaths._saveFolder}/{directory.Name}", saveController);
+            var saveData = new SaveData(i,directory.Name,$"{SaveDataFilesPaths._saveFolder}/{directory.Name}", saveController);
             saveData.LoadAllData();
             tree.Add($"Saves/{directory.Name}", saveData, directory.Name == currentSaveId? SdfIconType.ArchiveFill : SdfIconType.Archive);
         }
